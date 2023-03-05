@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style type="text/css">
+        td {
+            border: 1px solid darkgray;
+            padding: 2px;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bolder;
+            text-shadow: 1px 0 #888888;
+            background-color: gray;
+        }
+
+            td.x3 {
+                color: red;
+            }
+
+            td.x2 {
+                color: green;
+            }
+
+            td.x1 {
+                color: blue;
+            }
+
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+        }
+    </style>
+</head>
+<body>
+    <table id="matrix"></table>
+    <script>
+        let matrixView = document.getElementById('matrix');
+        let totalNumberOfBombs = 37;
+        let size = 16;
+        let matrix;
+        init(size);
+        placeBombs();
+        calculateNearByBombs();
+        
+
+        // matrix.rows[0].cells[0].isBomb = true;
+        // matrix.rows[0].cells[0].isOpen = true;
+        // matrix.rows[0].cells[1].bombsNearBy = 3;
+        // matrix.rows[0].cells[1].isOpen = true;
+        // matrix.rows[0].cells[2].isOpen = true;
+
+        showMatrix();
+
+        function showMatrix(){
+            matrixView.innerHTML = '';
+            for(let rowCounter = 0; rowCounter<matrix.rows.length; rowCounter++){
+                let viewRow = matrixView.insertRow();
+                let modelRow = matrix.rows[rowCounter];
+                
+                for(let cellCounter = 0; cellCounter<modelRow.cells.length; cellCounter++){
+                    let viewCell = viewRow.insertCell();
+                    let modelCell = modelRow.cells[cellCounter];
+                 
+                    
+                    if (modelCell.isOpen) {
+                        
+                        viewCell.style.backgroundColor = 'lightcyan';
+                        if(modelCell.isBomb){
+                            
+                            viewCell.innerHTML = '💣';
+                        }
+                        else if(modelCell.bombsNearBy > 0){
+                            viewCell.innerHTML = modelCell.bombsNearBy;
+                            viewCell.classList.add('x' + modelCell.bombsNearBy);
+                        }
+
+                        
+                    }
+                    else {
+                        viewCell.addEventListener("click", handleClick, false);
+                        
+                    }
+
+                    
+                }
+
+            }
+        }
+
+        function placeBombs(){
+            for (let bombCount = 0; bombCount<totalNumberOfBombs; bombCount++){
+                let rowIndex = Math.floor(Math.random()*size);
+                let columnIndex = Math.floor(Math.random()*size);
+                matrix.rows[rowIndex].cells[columnIndex].isBomb = true;
+            }
+
+            
+            
+
+            
+
+        }
+        function calculateNearByBombs(){
+            let numberOfBombs;
+            for(let rowCounter = 0; rowCounter<matrix.rows.length; rowCounter++){
+                    let modelRow = matrix.rows[rowCounter];
+                
+                for(let cellCounter = 0; cellCounter<modelRow.cells.length; cellCounter++){
+                    let modelCell = modelRow.cells[cellCounter];
+                    modelCell.bombsNearBy = findBombs(rowCounter-1, cellCounter-1) + findBombs(rowCounter-1, cellCounter)+findBombs(rowCounter-1, cellCounter+1)+
+                                        findBombs(rowCounter, cellCounter-1)+ findBombs(rowCounter, cellCounter+1)+
+                                        findBombs(rowCounter+1, cellCounter-1)+ findBombs(rowCounter+1, cellCounter)+ findBombs(rowCounter+1, cellCounter+1);
+                }
+            }
+            
+            
+
+        }
+         
+
+        function init(size){
+            matrix = {};
+            matrix.rows = [];
+            for(let rowCounter = 0; rowCounter<size; rowCounter++){
+                let modelRow = {};
+                modelRow.cells = [];
+                for(let cellCounter = 0; cellCounter<size; cellCounter++){
+                    let modelCell= {};
+                    modelCell = {
+                        isOpen: false,
+                        isBomb: false,
+                        bombsNearBy: 0,
+                    };
+                    modelRow.cells.push(modelCell);
+
+                }
+                matrix.rows.push(modelRow);
+
+            }
+        }
+
+        function findBombs(row, column){
+            if(row < 0 || row >= size || column < 0 || column >= size) return 0;
+           return matrix.rows[row].cells[column].isBomb; 
+
+        }
+        function handleClick(aMouseEvent){
+            console.log(aMouseEvent);
+            let column = aMouseEvent.srcElement.cellIndex;
+            let row = aMouseEvent.srcElement.parentElement.sectionRowIndex;
+            
+            openBlankCells(row, column);
+            matrix.rows[row].cells[column].isOpen = true;
+
+
+            
+            showMatrix();
+        }
+        function openBlankCells(row, column){
+            let modelCell = matrix.rows[row].cells[column];
+            if(row < 0 || row >= size || column < 0 || column >= size) return ;
+            if(!modelCell.isBomb && modelCell.bombsNearBy === 0 && !modelCell.isOpen ){
+                modelCell.isOpen = true;
+                openBlankCells(row-1, column);
+                openBlankCells(row, column-1);
+                openBlankCells(row, column+1);
+                openBlankCells(row+1, column);
+            }
+        }
+
+
+
+        // let cell = {
+        //     isOpen: false,
+        //     isBomb: true,
+        //     bombsNearBy: 0,
+        // };
+        // let row = {
+        //     cells: [cell, cell1, cell2],
+        // };
+        // let matrix = {
+        //     rows: [row, row1],
+        // };
+    </script>
+</body>
+</html>
